@@ -315,7 +315,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             };
             IEnumerable<VSCodeAction> expectedResponses = new List<VSCodeAction>() { expectedCodeAction, unexpectedCodeAction };
             requestInvoker.Setup(invoker => invoker.ReinvokeRequestOnMultipleServersAsync<VSCodeAction, VSCodeAction>(
-                MSLSPMethods.TextDocumentCodeActionResolveName,
+                Methods.CodeActionResolveName,
                 LanguageServerKind.CSharp.ToContentType(),
                 It.IsAny<Func<JToken, bool>>(),
                 It.IsAny<VSCodeAction>(),

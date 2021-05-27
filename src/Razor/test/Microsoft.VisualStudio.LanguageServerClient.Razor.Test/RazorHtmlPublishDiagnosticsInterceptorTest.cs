@@ -96,10 +96,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = Mock.Of<LSPDiagnosticsTranslator>(MockBehavior.Strict);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = RazorUri
             };
             var token = JToken.FromObject(diagnosticRequest);
@@ -120,10 +119,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = Mock.Of<LSPDiagnosticsTranslator>(MockBehavior.Strict);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = CshtmlUri
             };
             var token = JToken.FromObject(diagnosticRequest);
@@ -144,10 +142,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = Mock.Of<LSPDiagnosticsTranslator>(MockBehavior.Strict);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = RazorVirtualCssUri
             };
             var token = JToken.FromObject(diagnosticRequest);
@@ -168,10 +165,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = Mock.Of<LSPDiagnosticsTranslator>(MockBehavior.Strict);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = RazorVirtualHtmlUri
             };
 
@@ -179,7 +175,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var result = await htmlDiagnosticsInterceptor.ApplyChangesAsync(JToken.FromObject(diagnosticRequest), string.Empty, cancellationToken: default).ConfigureAwait(false);
 
             // Assert
-            var updatedParams = result.UpdatedToken.ToObject<VSPublishDiagnosticParams>();
+            var updatedParams = result.UpdatedToken.ToObject<PublishDiagnosticParams>();
             Assert.Empty(updatedParams.Diagnostics);
             Assert.Equal(RazorUri, updatedParams.Uri);
             Assert.True(result.ChangedDocumentUri);
@@ -198,10 +194,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
                 .Returns(true);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager.Object, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = RazorVirtualHtmlUri
             };
 
@@ -209,7 +204,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var result = await htmlDiagnosticsInterceptor.ApplyChangesAsync(JToken.FromObject(diagnosticRequest), string.Empty, cancellationToken: default).ConfigureAwait(false);
 
             // Assert
-            var updatedParams = result.UpdatedToken.ToObject<VSPublishDiagnosticParams>();
+            var updatedParams = result.UpdatedToken.ToObject<PublishDiagnosticParams>();
             Assert.Empty(updatedParams.Diagnostics);
             Assert.Equal(RazorUri, updatedParams.Uri);
             Assert.True(result.ChangedDocumentUri);
@@ -223,10 +218,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = Mock.Of<LSPDiagnosticsTranslator>(MockBehavior.Strict);
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Array.Empty<Diagnostic>(),
-                Mode = null,
                 Uri = RazorVirtualHtmlUri
             };
 
@@ -234,7 +228,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var result = await htmlDiagnosticsInterceptor.ApplyChangesAsync(JToken.FromObject(diagnosticRequest), string.Empty, cancellationToken: default).ConfigureAwait(false);
 
             // Assert
-            var updatedParams = result.UpdatedToken.ToObject<VSPublishDiagnosticParams>();
+            var updatedParams = result.UpdatedToken.ToObject<PublishDiagnosticParams>();
             Assert.Empty(updatedParams.Diagnostics);
             Assert.Equal(RazorUri, updatedParams.Uri);
             Assert.True(result.ChangedDocumentUri);
@@ -248,10 +242,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var diagnosticsProvider = GetDiagnosticsProvider();
 
             var htmlDiagnosticsInterceptor = new RazorHtmlPublishDiagnosticsInterceptor(documentManager, diagnosticsProvider, LoggerProvider);
-            var diagnosticRequest = new VSPublishDiagnosticParams()
+            var diagnosticRequest = new PublishDiagnosticParams()
             {
                 Diagnostics = Diagnostics,
-                Mode = null,
                 Uri = RazorVirtualHtmlUri
             };
 
@@ -259,7 +252,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             var result = await htmlDiagnosticsInterceptor.ApplyChangesAsync(JToken.FromObject(diagnosticRequest), string.Empty, cancellationToken: default).ConfigureAwait(false);
 
             // Assert
-            var updatedParams = result.UpdatedToken.ToObject<VSPublishDiagnosticParams>();
+            var updatedParams = result.UpdatedToken.ToObject<PublishDiagnosticParams>();
             Assert.Equal(Diagnostics, updatedParams.Diagnostics);
             Assert.Equal(RazorUri, updatedParams.Uri);
             Assert.True(result.ChangedDocumentUri);

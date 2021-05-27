@@ -12,7 +12,7 @@ using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
 namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
 {
-    public class OnTypeRenameHandlerTest : HandlerTestBase
+    public class LinkedEditingRangeHandlerTest : HandlerTestBase
     {
         private static readonly Uri Uri = new Uri("C:/path/to/file.razor");
 
@@ -24,15 +24,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             var requestInvoker = Mock.Of<LSPRequestInvoker>(MockBehavior.Strict);
             var projectionProvider = Mock.Of<LSPProjectionProvider>(MockBehavior.Strict);
             var documentMappingProvider = Mock.Of<LSPDocumentMappingProvider>(MockBehavior.Strict);
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(0, 1)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.Null(result);
@@ -49,15 +49,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             Mock.Get(projectionProvider).Setup(projectionProvider => projectionProvider.GetProjectionAsync(It.IsAny<LSPDocumentSnapshot>(), It.IsAny<Position>(), CancellationToken.None))
                 .Returns(Task.FromResult<ProjectionResult>(null));
             var documentMappingProvider = Mock.Of<LSPDocumentMappingProvider>(MockBehavior.Strict);
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(0, 1)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.Null(result);
@@ -78,15 +78,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             };
             var projectionProvider = GetProjectionProvider(projectionResult);
 
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(10, 5)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.Null(result);
@@ -102,11 +102,11 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             documentManager.AddDocument(Uri, Mock.Of<LSPDocumentSnapshot>(d => d.Version == 0, MockBehavior.Strict));
 
             var htmlResponse = GetMatchingHTMLBracketRange(10);
-            var requestInvoker = GetRequestInvoker<DocumentOnTypeRenameParams, DocumentOnTypeRenameResponseItem>(
+            var requestInvoker = GetRequestInvoker<LinkedEditingRangeParams, LinkedEditingRanges>(
                 htmlResponse,
                 (method, serverContentType, highlightParams, ct) =>
                 {
-                    Assert.Equal(MSLSPMethods.OnTypeRenameName, method);
+                    Assert.Equal(Methods.TextDocumentLinkedEditingRangeName, method);
                     Assert.Equal(RazorLSPConstants.HtmlLSPContentTypeName, serverContentType);
                     invokerCalled = true;
                 });
@@ -119,15 +119,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
 
             var documentMappingProvider = GetDocumentMappingProvider(expectedResponse.Ranges, 0, RazorLanguageKind.Html);
 
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(10, 5)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.True(invokerCalled);
@@ -147,11 +147,11 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             documentManager.AddDocument(Uri, Mock.Of<LSPDocumentSnapshot>(d => d.Version == 1, MockBehavior.Strict));
 
             var htmlResponse = GetMatchingHTMLBracketRange(10);
-            var requestInvoker = GetRequestInvoker<DocumentOnTypeRenameParams, DocumentOnTypeRenameResponseItem>(
+            var requestInvoker = GetRequestInvoker<LinkedEditingRangeParams, LinkedEditingRanges>(
                 htmlResponse,
                 (method, serverContentType, highlightParams, ct) =>
                 {
-                    Assert.Equal(MSLSPMethods.OnTypeRenameName, method);
+                    Assert.Equal(Methods.TextDocumentLinkedEditingRangeName, method);
                     Assert.Equal(RazorLSPConstants.HtmlLSPContentTypeName, serverContentType);
                     invokerCalled = true;
                 });
@@ -164,15 +164,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
 
             var documentMappingProvider = GetDocumentMappingProvider(expectedResponse.Ranges, 0 /* Different from document version (1) */, RazorLanguageKind.Html);
 
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(10, 5)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.True(invokerCalled);
@@ -189,11 +189,11 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             documentManager.AddDocument(Uri, Mock.Of<LSPDocumentSnapshot>(d => d.Version == 0, MockBehavior.Strict));
 
             var htmlResponse = GetMatchingHTMLBracketRange(10);
-            var requestInvoker = GetRequestInvoker<DocumentOnTypeRenameParams, DocumentOnTypeRenameResponseItem>(
+            var requestInvoker = GetRequestInvoker<LinkedEditingRangeParams, LinkedEditingRanges>(
                 htmlResponse,
                 (method, serverContentType, highlightParams, ct) =>
                 {
-                    Assert.Equal(MSLSPMethods.OnTypeRenameName, method);
+                    Assert.Equal(Methods.TextDocumentLinkedEditingRangeName, method);
                     Assert.Equal(RazorLSPConstants.HtmlLSPContentTypeName, serverContentType);
                     invokerCalled = true;
                 });
@@ -208,15 +208,15 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             Mock.Get(documentMappingProvider).Setup(p => p.MapToDocumentRangesAsync(RazorLanguageKind.Html, Uri, It.IsAny<Range[]>(), CancellationToken.None))
                 .Returns(Task.FromResult<RazorMapToDocumentRangesResponse>(null));
 
-            var onTypeRenameHandler = new OnTypeRenameHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
-            var onTypeRenameRequest = new DocumentOnTypeRenameParams()
+            var onLinkedEditingRangeHandler = new LinkedEditingRangeHandler(documentManager, requestInvoker, projectionProvider, documentMappingProvider, LoggerProvider);
+            var onLinkedEditingRangeRequest = new LinkedEditingRangeParams()
             {
                 TextDocument = new TextDocumentIdentifier() { Uri = Uri },
                 Position = new Position(10, 5)
             };
 
             // Act
-            var result = await onTypeRenameHandler.HandleRequestAsync(onTypeRenameRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
+            var result = await onLinkedEditingRangeHandler.HandleRequestAsync(onLinkedEditingRangeRequest, new ClientCapabilities(), CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             Assert.True(invokerCalled);
@@ -256,9 +256,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             return documentMappingProvider.Object;
         }
 
-        private static DocumentOnTypeRenameResponseItem GetMatchingHTMLBracketRange(int line)
+        private static LinkedEditingRanges GetMatchingHTMLBracketRange(int line)
         {
-            return new DocumentOnTypeRenameResponseItem()
+            return new LinkedEditingRanges()
             {
                 Ranges = new[] {
                     new Range()

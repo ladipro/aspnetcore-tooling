@@ -61,15 +61,13 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
 
         public IRequestBroker<FoldingRangeParams, FoldingRange[]> FoldingRangeBroker => throw new NotImplementedException();
 
-        public IRequestBroker<GetTextDocumentWithContextParams, ActiveProjectContexts> ProjectContextBroker => throw new NotImplementedException();
+        public IRequestBroker<VSGetTextDocumentWithContextParams, VSActiveProjectContexts> ProjectContextBroker => throw new NotImplementedException();
 
         public IEnumerable<Lazy<ILanguageClient, IContentTypeMetadata>> FactoryLanguageClients => throw new NotImplementedException();
 
         public IEnumerable<Lazy<ILanguageClient, IContentTypeMetadata>> LanguageClients => throw new NotImplementedException();
 
         public IRequestBroker<DocumentOnAutoInsertParams, DocumentOnAutoInsertResponseItem> OnAutoInsertBroker => throw new NotImplementedException();
-
-        public IRequestBroker<DocumentOnTypeRenameParams, DocumentOnTypeRenameResponseItem> OnTypeRenameBroker => throw new NotImplementedException();
 
         public IRequestBroker<CodeAction, CodeAction> CodeActionsResolveBroker => throw new NotImplementedException();
 

@@ -576,7 +576,7 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         {
             // Arrange
             var methodName = MSLSPMethods.DocumentReferencesName;
-            var capabilities = new VSServerCapabilities()
+            var capabilities = new VSInternalServerCapabilities()
             {
                 MSReferencesProvider = true,
             };
@@ -594,7 +594,7 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         public void Resolve_ProjectContext_ReturnsTrue()
         {
             // Arrange
-            var methodName = MSLSPMethods.ProjectContextsName;
+            var methodName = VSLSPMethods.ProjectContextsName;
             var capabilities = new VSServerCapabilities()
             {
                 ProjectContextProvider = true,
@@ -613,10 +613,13 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         public void Resolve_CodeActionResolve_ReturnsTrue()
         {
             // Arrange
-            var methodName = MSLSPMethods.TextDocumentCodeActionResolveName;
-            var capabilities = new VSServerCapabilities()
+            var methodName = Methods.CodeActionResolveName;
+            var capabilities = new ServerCapabilities()
             {
-                CodeActionsResolveProvider = true,
+                CodeActionProvider = new CodeActionOptions()
+                {
+                    ResolveProvider = true,
+                },
             };
             var jobjectCapabilities = JObject.FromObject(capabilities);
             var filter = Resolver.Resolve(methodName);
@@ -633,7 +636,7 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         {
             // Arrange
             var methodName = MSLSPMethods.OnAutoInsertName;
-            var capabilities = new VSServerCapabilities()
+            var capabilities = new VSInternalServerCapabilities()
             {
                 OnAutoInsertProvider = new DocumentOnAutoInsertOptions(),
             };
@@ -652,7 +655,7 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         {
             // Arrange
             var methodName = MSLSPMethods.DocumentPullDiagnosticName;
-            var capabilities = new VSServerCapabilities()
+            var capabilities = new VSInternalServerCapabilities()
             {
                 SupportsDiagnosticRequests = true,
             };
@@ -685,9 +688,9 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         [InlineData(Methods.TextDocumentCompletionResolveName)]
         [InlineData(Methods.TextDocumentDefinitionName)]
         [InlineData(Methods.TextDocumentDocumentHighlightName)]
+        [InlineData(Methods.CodeActionResolveName)]
+        [InlineData(VSLSPMethods.ProjectContextsName)]
         [InlineData(MSLSPMethods.DocumentReferencesName)]
-        [InlineData(MSLSPMethods.ProjectContextsName)]
-        [InlineData(MSLSPMethods.TextDocumentCodeActionResolveName)]
         [InlineData(MSLSPMethods.OnAutoInsertName)]
         [InlineData(MSLSPMethods.DocumentPullDiagnosticName)]
         [InlineData(MSLSPMethods.WorkspacePullDiagnosticName)]
