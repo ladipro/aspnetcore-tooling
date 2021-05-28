@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Razor.LanguageServer.Common;
 using Microsoft.AspNetCore.Razor.LanguageServer.Semantic;
 using Microsoft.AspNetCore.Razor.LanguageServer.Semantic.Models;
 using Microsoft.CodeAnalysis.ExternalAccess.Razor;
@@ -289,7 +288,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             semanticTokensParams.TextDocument.Uri = csharpDoc.Uri;
 
             var csharpResults = await _requestInvoker.ReinvokeRequestOnServerAsync<SemanticTokensParams, SemanticTokens>(
-                LanguageServerConstants.LegacyRazorSemanticTokensEndpoint,
+                Methods.TextDocumentSemanticTokensFullName,
                 LanguageServerKind.CSharp.ToContentType(),
                 semanticTokensParams,
                 cancellationToken).ConfigureAwait(false);
@@ -320,7 +319,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
             semanticTokensEditsParams.TextDocument.Uri = csharpDoc.Uri;
 
             var csharpResults = await _requestInvoker.ReinvokeRequestOnServerAsync<SemanticTokensDeltaParams, SumType<LanguageServer.Protocol.SemanticTokens, SemanticTokensDelta>>(
-                LanguageServerConstants.LegacyRazorSemanticTokensEditEndpoint,
+                Methods.TextDocumentSemanticTokensFullDeltaName,
                 LanguageServerKind.CSharp.ToContentType(),
                 semanticTokensEditsParams,
                 cancellationToken).ConfigureAwait(false);
@@ -378,11 +377,9 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor
         {
             var serverCapabilities = token.ToObject<ServerCapabilities>();
 
-            var providesCodeActions = serverCapabilities?.CodeActionProvider?.Match(
-                boolValue => boolValue,
-                options => options != null) ?? false;
-
-            var resolvesCodeActions = serverCapabilities?.CodeActionProvider?.Second?.ResolveProvider == true;
+            var (providesCodeActions, resolvesCodeActions) = serverCapabilities?.CodeActionProvider?.Match(
+                boolValue => (boolValue, false),
+                options => (true, options.ResolveProvider)) ?? (false, false);
 
             return providesCodeActions && resolvesCodeActions;
         }

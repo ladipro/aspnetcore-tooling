@@ -256,7 +256,11 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         {
             var serverCapabilities = token.ToObject<ServerCapabilities>();
 
-            return serverCapabilities?.CodeActionProvider?.Second?.ResolveProvider == true;
+            var resolvesCodeActions = serverCapabilities?.CodeActionProvider?.Match(
+                boolValue => false,
+                options => options.ResolveProvider) ?? false;
+
+            return resolvesCodeActions;
         }
 
         private static bool CheckOnAutoInsertCapabilities(JToken token)

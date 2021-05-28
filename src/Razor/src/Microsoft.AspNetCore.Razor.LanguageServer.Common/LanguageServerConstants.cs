@@ -9,13 +9,6 @@ namespace Microsoft.AspNetCore.Razor.LanguageServer.Common
 
         public const string ProjectConfigurationFile = "project.razor.json";
 
-        // Semantic "Legacy" endpoints refer to an old LSP spec version, needed for now until VS reacts.
-        public const string LegacyRazorSemanticTokensEndpoint = "textDocument/semanticTokens";
-
-        public const string LegacyRazorSemanticTokensEditEndpoint = "textDocument/semanticTokens/edits";
-
-        public const string LegacyRazorSemanticTokensRangeEndpoint = "textDocument/semanticTokens/range";
-
         public const string RazorSemanticTokensLegendEndpoint = "_ms_/textDocument/semanticTokensLegend";
 
         public const string RazorSemanticTokensEditEndpoint = "textDocument/semanticTokens/full/delta";
