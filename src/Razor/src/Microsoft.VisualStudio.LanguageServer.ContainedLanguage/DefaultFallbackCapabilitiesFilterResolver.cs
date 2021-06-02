@@ -274,7 +274,9 @@ namespace Microsoft.VisualStudio.LanguageServer.ContainedLanguage
         {
             var serverCapabilities = token.ToObject<ServerCapabilities>();
 
-            return serverCapabilities?.LinkedEditingRangeProvider != null;
+            return serverCapabilities?.LinkedEditingRangeProvider?.Match(
+              boolValue => boolValue,
+              options => options != null) ?? false;
         }
 
         private static bool CheckPullDiagnosticCapabilities(JToken token)
