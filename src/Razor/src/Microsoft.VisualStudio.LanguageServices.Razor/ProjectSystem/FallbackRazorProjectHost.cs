@@ -38,8 +38,9 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         public FallbackRazorProjectHost(
             IUnconfiguredProjectCommonServices commonServices,
             [Import(typeof(VisualStudioWorkspace))] Workspace workspace,
-            ProjectConfigurationFilePathStore projectConfigurationFilePathStore)
-            : base(commonServices, workspace, projectConfigurationFilePathStore)
+            ProjectConfigurationFilePathStore projectConfigurationFilePathStore,
+            ForegroundDispatcher foregroundDispatcher)
+            : base(commonServices, workspace, projectConfigurationFilePathStore, foregroundDispatcher)
         {
         }
 
@@ -47,8 +48,9 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
             IUnconfiguredProjectCommonServices commonServices,
             Workspace workspace,
             ProjectConfigurationFilePathStore projectConfigurationFilePathStore,
-            ProjectSnapshotManagerBase projectManager)
-            : base(commonServices, workspace, projectConfigurationFilePathStore, projectManager)
+            ProjectSnapshotManagerBase projectManager,
+            ForegroundDispatcher foregroundDispatcher)
+            : base(commonServices, workspace, projectConfigurationFilePathStore, projectManager, foregroundDispatcher)
         {
         }
 

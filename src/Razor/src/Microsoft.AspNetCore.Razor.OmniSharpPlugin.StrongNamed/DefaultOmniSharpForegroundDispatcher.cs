@@ -3,7 +3,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Razor.LanguageServer.Common;
+using Microsoft.CodeAnalysis.Razor.Workspaces;
 
 namespace Microsoft.AspNetCore.Razor.OmniSharpPlugin
 {

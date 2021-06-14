@@ -29,6 +29,8 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         private readonly Dictionary<string, HostDocument> _currentDocuments;
         protected readonly ProjectConfigurationFilePathStore _projectConfigurationFilePathStore;
 
+        private readonly ForegroundDispatcher _foregroundDispatcher;
+
         internal const string BaseIntermediateOutputPathPropertyName = "BaseIntermediateOutputPath";
         internal const string IntermediateOutputPathPropertyName = "IntermediateOutputPath";
         internal const string MSBuildProjectDirectoryPropertyName = "MSBuildProjectDirectory";
@@ -42,7 +44,8 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         public RazorProjectHostBase(
             IUnconfiguredProjectCommonServices commonServices,
             [Import(typeof(VisualStudioWorkspace))] Workspace workspace,
-            ProjectConfigurationFilePathStore projectConfigurationFilePathStore)
+            ProjectConfigurationFilePathStore projectConfigurationFilePathStore,
+            ForegroundDispatcher foregroundDispatcher)
             : base(commonServices.ThreadingService.JoinableTaskContext)
         {
             if (commonServices == null)
@@ -55,12 +58,18 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
                 throw new ArgumentNullException(nameof(workspace));
             }
 
+            if (foregroundDispatcher is null)
+            {
+                throw new ArgumentNullException(nameof(foregroundDispatcher));
+            }
+
             CommonServices = commonServices;
             _workspace = workspace;
 
             _lock = new AsyncSemaphore(initialCount: 1);
             _currentDocuments = new Dictionary<string, HostDocument>(FilePathComparer.Instance);
             _projectConfigurationFilePathStore = projectConfigurationFilePathStore;
+            _foregroundDispatcher = foregroundDispatcher;
         }
 
         // Internal for testing
@@ -68,8 +77,9 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
             IUnconfiguredProjectCommonServices commonServices,
             Workspace workspace,
             ProjectConfigurationFilePathStore projectConfigurationFilePathStore,
-            ProjectSnapshotManagerBase projectManager)
-            : this(commonServices, workspace, projectConfigurationFilePathStore)
+            ProjectSnapshotManagerBase projectManager,
+            ForegroundDispatcher foregroundDispatcher)
+            : this(commonServices, workspace, projectConfigurationFilePathStore, foregroundDispatcher)
         {
             if (projectManager == null)
             {
@@ -147,7 +157,7 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         // Should only be called from the UI thread.
         private ProjectSnapshotManagerBase GetProjectManager()
         {
-            CommonServices.ThreadingService.VerifyOnUIThread();
+            _foregroundDispatcher.AssertForegroundThread(caller: nameof(GetProjectManager));
 
             if (_projectManager == null)
             {
@@ -159,7 +169,7 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
 
         protected async Task UpdateAsync(Action action)
         {
-            await CommonServices.ThreadingService.SwitchToUIThread();
+            await _foregroundDispatcher.ForegroundScheduler;
             action();
         }
 

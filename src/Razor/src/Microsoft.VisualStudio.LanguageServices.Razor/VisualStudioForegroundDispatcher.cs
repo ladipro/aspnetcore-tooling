@@ -4,7 +4,7 @@
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Razor;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.CodeAnalysis.Razor.Workspaces;
 
 namespace Microsoft.VisualStudio.LanguageServices.Razor
 {
@@ -12,10 +12,19 @@ namespace Microsoft.VisualStudio.LanguageServices.Razor
     [Export(typeof(ForegroundDispatcher))]
     internal class VisualStudioForegroundDispatcher : ForegroundDispatcher
     {
+        private readonly ForegroundDispatcher _foregroundDispatcher;
+
+        [ImportingConstructor]
+        public VisualStudioForegroundDispatcher()
+        {
+            _foregroundDispatcher = new DefaultForegroundDispatcher();
+            ForegroundScheduler = _foregroundDispatcher.ForegroundScheduler;
+        }
+
         public override TaskScheduler BackgroundScheduler { get; } = TaskScheduler.Default;
 
-        public override TaskScheduler ForegroundScheduler { get; } = TaskScheduler.FromCurrentSynchronizationContext();
+        public override TaskScheduler ForegroundScheduler { get; }
 
-        public override bool IsForegroundThread => ThreadHelper.CheckAccess();
+        public override bool IsForegroundThread => _foregroundDispatcher.IsForegroundThread;
     }
 }
