@@ -301,7 +301,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
             var serializer = messageFormatter.JsonSerializer;
-            AddVSExtensionConverters(serializer);
+            serializer.AddVSInternalExtensionConverters();
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
             var messageHandler = new HeaderDelimitedMessageHandler(outputStream, inputStream, messageFormatter);
@@ -310,24 +310,6 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             // The JsonRpc object owns disposing the message handler which disposes the formatter.
             var jsonRpc = new JsonRpc(messageHandler, target);
             return jsonRpc;
-
-            // Can be removed for serializer.AddVSExtensionConverters() once we are able to update to a newer LSP protocol Extensions version.
-            static void AddVSExtensionConverters(JsonSerializer serializer)
-            {
-                serializer.Converters.Add(new VSExtensionConverter<ClientCapabilities, VSClientCapabilities>());
-                serializer.Converters.Add(new VSExtensionConverter<CodeAction, VSCodeAction>());
-                serializer.Converters.Add(new VSExtensionConverter<CodeActionContext, VSCodeActionContext>());
-                serializer.Converters.Add(new VSExtensionConverter<CompletionContext, VSCompletionContext>());
-                serializer.Converters.Add(new VSExtensionConverter<CompletionItem, VSCompletionItem>());
-                serializer.Converters.Add(new VSExtensionConverter<CompletionList, VSCompletionList>());
-                serializer.Converters.Add(new VSExtensionConverter<Diagnostic, VSDiagnostic>());
-                serializer.Converters.Add(new VSExtensionConverter<Hover, VSHover>());
-                serializer.Converters.Add(new VSExtensionConverter<ServerCapabilities, VSServerCapabilities>());
-                serializer.Converters.Add(new VSExtensionConverter<SignatureInformation, VSSignatureInformation>());
-                serializer.Converters.Add(new VSExtensionConverter<SymbolInformation, VSSymbolInformation>());
-                serializer.Converters.Add(new VSExtensionConverter<TextDocumentClientCapabilities, VSTextDocumentClientCapabilities>());
-                serializer.Converters.Add(new VSExtensionConverter<TextDocumentIdentifier, VSTextDocumentIdentifier>());
-            }
         }
 
         private static ImmutableDictionary<string, Lazy<IRequestHandler, IRequestHandlerMetadata>> CreateMethodToHandlerMap(IEnumerable<Lazy<IRequestHandler, IRequestHandlerMetadata>> requestHandlers)

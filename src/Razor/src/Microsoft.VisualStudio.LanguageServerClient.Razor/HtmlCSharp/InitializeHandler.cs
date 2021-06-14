@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.LanguageServerClient.Razor.HtmlCSharp
             _serverCapabilities = new List<(ILanguageClient, VSInternalServerCapabilities)>();
 
             _serializer = new JsonSerializer();
-            _serializer.AddVSExtensionConverters();
+            _serializer.AddVSInternalExtensionConverters();
         }
 
         public Task<InitializeResult> HandleRequestAsync(InitializeParams request, ClientCapabilities clientCapabilities, CancellationToken cancellationToken)
