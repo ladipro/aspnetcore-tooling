@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language.Components;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
 {
@@ -18,6 +19,7 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
     internal class WorkspaceProjectStateChangeDetector : ProjectSnapshotChangeTrigger
     {
         private readonly ProjectWorkspaceStateGenerator _workspaceStateGenerator;
+        private readonly ForegroundDispatcher _foregroundDispatcher;
         private ProjectSnapshotManagerBase _projectManager;
 
         public int EnqueueDelay { get; set; } = 3 * 1000;
@@ -29,7 +31,7 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         internal Dictionary<ProjectId, UpdateItem> _deferredUpdates;
 
         [ImportingConstructor]
-        public WorkspaceProjectStateChangeDetector(ProjectWorkspaceStateGenerator workspaceStateGenerator)
+        public WorkspaceProjectStateChangeDetector(ProjectWorkspaceStateGenerator workspaceStateGenerator, ForegroundDispatcher foregroundDispatcher)
         {
             if (workspaceStateGenerator == null)
             {
@@ -37,6 +39,7 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
             }
 
             _workspaceStateGenerator = workspaceStateGenerator;
+            _foregroundDispatcher = foregroundDispatcher;
         }
 
         // Used in unit tests to ensure we can control when background work starts.
@@ -64,8 +67,13 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         }
 
         // Internal for testing, virtual for temporary VSCode workaround
-        internal virtual void Workspace_WorkspaceChanged(object sender, WorkspaceChangeEventArgs e)
+#pragma warning disable VSTHRD100 // Avoid async void methods
+        internal async virtual void Workspace_WorkspaceChanged(object sender, WorkspaceChangeEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
+            // to-do: make more grainy
+            await _foregroundDispatcher.ForegroundScheduler;
+
             Project project;
             switch (e.Kind)
             {

@@ -3,8 +3,10 @@
 
 using System;
 using System.Composition;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis.Razor;
 using Microsoft.CodeAnalysis.Razor.ProjectSystem;
+using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.VisualStudio.Editor.Razor.Documents
 {
@@ -20,12 +22,16 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         private readonly EventHandler _onOpened;
         private readonly EventHandler _onClosed;
 
+        private ForegroundDispatcher _foregroundDispatcher;
+        private JoinableTaskFactory _joinableTaskFactory;
         private EditorDocumentManager _documentManager;
         private ProjectSnapshotManagerBase _projectManager;
 
         [ImportingConstructor]
-        public EditorDocumentManagerListener()
+        public EditorDocumentManagerListener(ForegroundDispatcher foregroundDispatcher, JoinableTaskFactory joinableTaskFactory)
         {
+            _foregroundDispatcher = foregroundDispatcher;
+            _joinableTaskFactory = joinableTaskFactory;
             _onChangedOnDisk = Document_ChangedOnDisk;
             _onChangedInEditor = Document_ChangedInEditor;
             _onOpened = Document_Opened;
@@ -33,14 +39,25 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         }
 
         // For testing purposes only.
-        internal EditorDocumentManagerListener(EditorDocumentManager documentManager, EventHandler onChangedOnDisk, EventHandler onChangedInEditor, EventHandler onOpened, EventHandler onClosed)
+#pragma warning disable RS0034 // Exported parts should be marked with 'ImportingConstructorAttribute'
+        internal EditorDocumentManagerListener(
+            ForegroundDispatcher foregroundDispatcher,
+            JoinableTaskFactory joinableTaskFactory,
+            EditorDocumentManager documentManager,
+            EventHandler onChangedOnDisk,
+            EventHandler onChangedInEditor,
+            EventHandler onOpened,
+            EventHandler onClosed)
         {
+            _foregroundDispatcher = foregroundDispatcher;
+            _joinableTaskFactory = joinableTaskFactory;
             _documentManager = documentManager;
             _onChangedOnDisk = onChangedOnDisk;
             _onChangedInEditor = onChangedInEditor;
             _onOpened = onOpened;
             _onClosed = onClosed;
         }
+#pragma warning restore RS0034 // Exported parts should be marked with 'ImportingConstructorAttribute'
 
         // InitializePriority controls when a snapshot change trigger gets initialized. By specifying 100 we're saying we're pretty important and should get initialized before
         // other triggers with lesser priority so we can attach to Changed sooner. We happen to be so important because we control the open/close state of documents. If other triggers
@@ -61,31 +78,44 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         }
 
         // Internal for testing.
-        internal void ProjectManager_Changed(object sender, ProjectChangeEventArgs e)
+#pragma warning disable VSTHRD100 // Avoid async void methods
+        internal async void ProjectManager_Changed(object sender, ProjectChangeEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
-            switch (e.Kind)
+            try
             {
-                case ProjectChangeKind.DocumentAdded:
-                    {
-                        var key = new DocumentKey(e.ProjectFilePath, e.DocumentFilePath);
-                        var document = _documentManager.GetOrCreateDocument(key, _onChangedOnDisk, _onChangedInEditor, _onOpened, _onClosed);
-                        if (document.IsOpenInEditor)
+                switch (e.Kind)
+                {
+                    case ProjectChangeKind.DocumentAdded:
                         {
-                            _onOpened(document, EventArgs.Empty);
+                            var key = new DocumentKey(e.ProjectFilePath, e.DocumentFilePath);
+
+                            await _joinableTaskFactory.SwitchToMainThreadAsync();
+                            var document = _documentManager.GetOrCreateDocument(key, _onChangedOnDisk, _onChangedInEditor, _onOpened, _onClosed);
+                            await _foregroundDispatcher.ForegroundScheduler;
+
+                            if (document.IsOpenInEditor)
+                            {
+                                _onOpened(document, EventArgs.Empty);
+                            }
+
+                            break;
                         }
 
-                        break;
-                    }
-
-                case ProjectChangeKind.DocumentRemoved:
-                    {
-                        // This class 'owns' the document entry so it's safe for us to dispose it.
-                        if (_documentManager.TryGetDocument(new DocumentKey(e.ProjectFilePath, e.DocumentFilePath), out var document))
+                    case ProjectChangeKind.DocumentRemoved:
                         {
-                            document.Dispose();
+                            // This class 'owns' the document entry so it's safe for us to dispose it.
+                            if (_documentManager.TryGetDocument(new DocumentKey(e.ProjectFilePath, e.DocumentFilePath), out var document))
+                            {
+                                document.Dispose();
+                            }
+                            break;
                         }
-                        break;
-                    }
+                }
+            }
+            catch
+            {
+                Debug.Fail("ProjectManager_Changed");
             }
         }
 
