@@ -1,17 +1,20 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Razor.Workspaces;
+using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.AspNetCore.Razor.OmniSharpPlugin
 {
     public class DefaultOmniSharpForegroundDispatcher : OmniSharpForegroundDispatcher
     {
-        public DefaultOmniSharpForegroundDispatcher()
+        [ImportingConstructor]
+        public DefaultOmniSharpForegroundDispatcher(JoinableTaskFactory joinableTaskFactory)
         {
-            InternalDispatcher = new DefaultForegroundDispatcher();
+            InternalDispatcher = new DefaultForegroundDispatcher(joinableTaskFactory);
         }
 
         public override bool IsForegroundThread => InternalDispatcher.IsForegroundThread;

@@ -1,20 +1,44 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Threading;
+using static Microsoft.VisualStudio.Threading.JoinableTaskFactory;
 
 namespace Microsoft.CodeAnalysis.Razor.Workspaces
 {
     internal class DefaultForegroundDispatcher : ForegroundDispatcher
     {
+        private readonly JoinableTaskFactory _joinableTaskFactory;
+
+        [ImportingConstructor]
+        public DefaultForegroundDispatcher(JoinableTaskFactory joinableTaskFactory)
+        {
+            if (joinableTaskFactory is null)
+            {
+                throw new ArgumentNullException(nameof(joinableTaskFactory));
+            }
+
+            _joinableTaskFactory = joinableTaskFactory;
+        }
+
         public override bool IsForegroundThread => System.Environment.CurrentManagedThreadId == ForegroundTaskScheduler.Instance.ForegroundThreadId;
 
         public override TaskScheduler ForegroundScheduler { get; } = ForegroundTaskScheduler.Instance;
 
         public override TaskScheduler BackgroundScheduler { get; } = TaskScheduler.Default;
+
+        public TaskScheduler UIScheduler { get; } = TaskScheduler.FromCurrentSynchronizationContext();
+
+        /*public MainThreadAwaitable SwitchToMainThreadAsync(CancellationToken cancellationToken = default)
+        {
+            return _joinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        }*/
 
         internal class ForegroundTaskScheduler : TaskScheduler
         {

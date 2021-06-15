@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Composition;
 using Microsoft.AspNetCore.Razor.LanguageServer.Common;
 using Microsoft.AspNetCore.Razor.OmniSharpPlugin.StrongNamed;
+using Microsoft.VisualStudio.Threading;
 using OmniSharp;
 
 namespace Microsoft.AspNetCore.Razor.OmniSharpPlugin
@@ -24,6 +25,9 @@ namespace Microsoft.AspNetCore.Razor.OmniSharpPlugin
     [Export(typeof(OmniSharpForegroundDispatcher))]
     internal class ExportOmniSharpForegroundDispatcher : DefaultOmniSharpForegroundDispatcher
     {
+        public ExportOmniSharpForegroundDispatcher(JoinableTaskFactory joinableTaskFactory) : base(joinableTaskFactory)
+        {
+        }
     }
 
     [Shared]

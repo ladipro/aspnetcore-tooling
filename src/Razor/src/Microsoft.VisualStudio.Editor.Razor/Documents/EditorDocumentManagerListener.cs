@@ -2,11 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Composition;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Razor;
 using Microsoft.CodeAnalysis.Razor.ProjectSystem;
-using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.VisualStudio.Editor.Razor.Documents
 {
@@ -22,16 +21,13 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         private readonly EventHandler _onOpened;
         private readonly EventHandler _onClosed;
 
-        private ForegroundDispatcher _foregroundDispatcher;
-        private JoinableTaskFactory _joinableTaskFactory;
         private EditorDocumentManager _documentManager;
         private ProjectSnapshotManagerBase _projectManager;
 
         [ImportingConstructor]
-        public EditorDocumentManagerListener(ForegroundDispatcher foregroundDispatcher, JoinableTaskFactory joinableTaskFactory)
+        [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+        public EditorDocumentManagerListener()
         {
-            _foregroundDispatcher = foregroundDispatcher;
-            _joinableTaskFactory = joinableTaskFactory;
             _onChangedOnDisk = Document_ChangedOnDisk;
             _onChangedInEditor = Document_ChangedInEditor;
             _onOpened = Document_Opened;
@@ -41,16 +37,12 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         // For testing purposes only.
 #pragma warning disable RS0034 // Exported parts should be marked with 'ImportingConstructorAttribute'
         internal EditorDocumentManagerListener(
-            ForegroundDispatcher foregroundDispatcher,
-            JoinableTaskFactory joinableTaskFactory,
             EditorDocumentManager documentManager,
             EventHandler onChangedOnDisk,
             EventHandler onChangedInEditor,
             EventHandler onOpened,
             EventHandler onClosed)
         {
-            _foregroundDispatcher = foregroundDispatcher;
-            _joinableTaskFactory = joinableTaskFactory;
             _documentManager = documentManager;
             _onChangedOnDisk = onChangedOnDisk;
             _onChangedInEditor = onChangedInEditor;
@@ -78,9 +70,7 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
         }
 
         // Internal for testing.
-#pragma warning disable VSTHRD100 // Avoid async void methods
-        internal async void ProjectManager_Changed(object sender, ProjectChangeEventArgs e)
-#pragma warning restore VSTHRD100 // Avoid async void methods
+        internal void ProjectManager_Changed(object sender, ProjectChangeEventArgs e)
         {
             try
             {
@@ -89,11 +79,7 @@ namespace Microsoft.VisualStudio.Editor.Razor.Documents
                     case ProjectChangeKind.DocumentAdded:
                         {
                             var key = new DocumentKey(e.ProjectFilePath, e.DocumentFilePath);
-
-                            await _joinableTaskFactory.SwitchToMainThreadAsync();
                             var document = _documentManager.GetOrCreateDocument(key, _onChangedOnDisk, _onChangedInEditor, _onOpened, _onClosed);
-                            await _foregroundDispatcher.ForegroundScheduler;
-
                             if (document.IsOpenInEditor)
                             {
                                 _onOpened(document, EventArgs.Empty);

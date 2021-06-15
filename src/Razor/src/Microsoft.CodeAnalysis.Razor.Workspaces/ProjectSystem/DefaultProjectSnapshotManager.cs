@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Razor.Workspaces;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
@@ -511,32 +513,43 @@ namespace Microsoft.CodeAnalysis.Razor.ProjectSystem
         }
 
         // virtual so it can be overridden in tests
-        protected virtual void NotifyListeners(ProjectChangeEventArgs e)
+#pragma warning disable VSTHRD100 // Avoid async void methods
+        protected async virtual void NotifyListeners(ProjectChangeEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
-            _foregroundDispatcher.AssertForegroundThread();
-
-            _notificationWork.Enqueue(e);
-
-            if (_notificationWork.Count == 1)
+            try
             {
-                // Only one notification, go ahead and start notifying. In the situation where Count > 1 it means an event was triggered as a response to another event.
-                // To ensure order we wont immediately re-invoke Changed here, we'll wait for the stack to unwind to notify others. This process still happens synchronously
-                // it just ensures that events happen in the correct order. For instance lets take the situation where a document is added to a project. That document will be
-                // added and then opened. However, if the result of "adding" causes an "open" to triger we want to ensure that "add" finishes prior to "open" being notified.
-
-
-                // Start unwinding the notification queue
-                do
+                if (_foregroundDispatcher is DefaultForegroundDispatcher d)
                 {
-                    // Don't dequeue yet, we want the notification to sit in the queue until we've finished notifying to ensure other calls to NotifyListeners know there's a currently running event loop.
-                    var args = _notificationWork.Peek();
-                    Changed?.Invoke(this, args);
+                    await Task.Factory.StartNew(() =>
+                    {
+                        _notificationWork.Enqueue(e);
 
-                    _notificationWork.Dequeue();
+                        if (_notificationWork.Count == 1)
+                        {
+                            // Only one notification, go ahead and start notifying. In the situation where Count > 1 it means an event was triggered as a response to another event.
+                            // To ensure order we wont immediately re-invoke Changed here, we'll wait for the stack to unwind to notify others. This process still happens synchronously
+                            // it just ensures that events happen in the correct order. For instance lets take the situation where a document is added to a project. That document will be
+                            // added and then opened. However, if the result of "adding" causes an "open" to triger we want to ensure that "add" finishes prior to "open" being notified.
+
+
+                            // Start unwinding the notification queue
+                            do
+                            {
+                                // Don't dequeue yet, we want the notification to sit in the queue until we've finished notifying to ensure other calls to NotifyListeners know there's a currently running event loop.
+                                var args = _notificationWork.Peek();
+                                Changed?.Invoke(this, args);
+
+                                _notificationWork.Dequeue();
+                            }
+                            while (_notificationWork.Count > 0);
+                        }
+                    }, CancellationToken.None, TaskCreationOptions.None, d.UIScheduler);
                 }
-                while (_notificationWork.Count > 0);
             }
-
+            catch
+            {
+            }
         }
 
         private class Entry

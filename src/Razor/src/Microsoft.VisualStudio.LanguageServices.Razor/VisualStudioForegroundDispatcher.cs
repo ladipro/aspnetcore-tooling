@@ -1,30 +1,22 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.ComponentModel.Composition;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Razor;
 using Microsoft.CodeAnalysis.Razor.Workspaces;
+using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.VisualStudio.LanguageServices.Razor
 {
     [System.Composition.Shared]
     [Export(typeof(ForegroundDispatcher))]
-    internal class VisualStudioForegroundDispatcher : ForegroundDispatcher
+    internal class VisualStudioForegroundDispatcher : DefaultForegroundDispatcher
     {
-        private readonly ForegroundDispatcher _foregroundDispatcher;
-
         [ImportingConstructor]
-        public VisualStudioForegroundDispatcher()
+        [Obsolete("This exported object must be obtained through the MEF export provider.", error: true)]
+        public VisualStudioForegroundDispatcher(JoinableTaskContext context) : base(context.Factory)
         {
-            _foregroundDispatcher = new DefaultForegroundDispatcher();
-            ForegroundScheduler = _foregroundDispatcher.ForegroundScheduler;
         }
-
-        public override TaskScheduler BackgroundScheduler { get; } = TaskScheduler.Default;
-
-        public override TaskScheduler ForegroundScheduler { get; }
-
-        public override bool IsForegroundThread => _foregroundDispatcher.IsForegroundThread;
     }
 }
